@@ -31,43 +31,39 @@ impl Pendulum {
     }
 
     pub fn update(&mut self, time_step: f32) {
-        self.top.angle_acceleration = self.calc_top_acceleration(self.top.angle, self.bottom.angle);
-        self.top.angle_acceleration = self.calc_bottom_acceleration(self.top.angle, self.bottom.angle);
-
-        self.top.angle_velocity += self.calc_top_velocity(self.top.angle, self.bottom.angle, time_step);
-        self.bottom.angle_velocity += self.calc_bottom_velocity(self.top.angle, self.bottom.angle, time_step);
-
         let temp_top = self.top.angle;
-        self.top.angle += self.calc_top_angle(self.top.angle, self.bottom.angle, time_step);
-        self.bottom.angle += self.calc_bottom_angle(temp_top, self.bottom.angle, time_step);
-        
+        self.top.angle_velocity += self.calc_top_velocity(self.top.angle, self.bottom.angle, time_step);
+        self.bottom.angle_velocity += self.calc_bottom_velocity(temp_top, self.bottom.angle, time_step);
+
+        self.top.angle += self.top.angle_velocity * time_step;
+        self.bottom.angle += self.bottom.angle_velocity * time_step;
 
         self.polar_to_cartesian();
     }
 
-    fn calc_top_acceleration(&mut self, a1: f32, a2: f32) -> f32 {
+    fn calc_top_acceleration(&mut self, a1: f32, a2: f32) -> f32{
         let g = self.gravity;
         let m1 = self.top.mass;
         let m2 = self.bottom.mass;
         let av1 = self.top.angle_velocity;
         let av2 = self.bottom.angle_velocity;
-        let l1 = self.top.length;
-        let l2 = self.bottom.length;
+        let l1 = self.top.length / 100.0;
+        let l2 = self.bottom.length / 100.0;
 
         let a = -1.0 * g * (2.0 * m1 + m2) * a1.sin() - m2 * g * (a1 - 2.0 * a2).sin() - 2.0 * (a1 - a2).sin() * m2 * (av2 * l2 + av1 * l1 * (a1-a2).cos());
         let b = l1 * (2.0 * m1 + m2 - m2 * (2.0 * a1 - 2.0 * a1).cos());
-
+        
         return a / b;
     }
 
-    fn calc_bottom_acceleration(&mut self, a1: f32, a2: f32) -> f32 {
+    fn calc_bottom_acceleration(&mut self, a1: f32, a2: f32) -> f32{
         let g = self.gravity;
         let m1 = self.top.mass;
         let m2 = self.bottom.mass;
         let av1 = self.top.angle_velocity;
         let av2 = self.bottom.angle_velocity;
-        let l1 = self.top.length;
-        let l2 = self.bottom.length;
+        let l1 = self.top.length / 100.0;
+        let l2 = self.bottom.length / 100.0;
 
         let c = 2.0 * (a1 - a2).sin() * (av1 * l1 * (m1 + m2) + g * (m1 + m2) * a1.cos() + av2 * l2 * m2 * (a1-a2).cos());
         let d = l2 * (2.0 * m1 + m2 - m2 * (2.0 * a1 - 2.0 * a2).cos());
@@ -89,24 +85,6 @@ impl Pendulum {
         let k2 = self.calc_bottom_acceleration(a1 + time_step * k1 / 2.0, a2 + time_step * k1 / 2.0);
         let k3 = self.calc_bottom_acceleration(a1 + time_step * k2 / 2.0, a2 + time_step * k2 / 2.0);
         let k4 = self.calc_bottom_acceleration(a1 + time_step, a2 + time_step);
-
-        return (1.0 / 6.0) * time_step * (k1 + k2 + k3 + k4);
-    }
-
-    fn calc_top_angle(&mut self, a1: f32, a2: f32, time_step: f32) -> f32{
-        let k1 = self.calc_top_velocity(a1, a2, time_step);
-        let k2 = self.calc_top_velocity(a1 + time_step * k1 / 2.0, a2 + time_step * k1 / 2.0, time_step);
-        let k3 = self.calc_top_velocity(a1 + time_step * k2 / 2.0, a2 + time_step * k2 / 2.0, time_step);
-        let k4 = self.calc_top_velocity(a1 + time_step, a2 + time_step, time_step);
-
-        return (1.0 / 6.0) * time_step * (k1 + k2 + k3 + k4);
-    }
-
-    fn calc_bottom_angle(&mut self, a1: f32, a2: f32, time_step: f32) -> f32{
-        let k1 = self.calc_bottom_velocity(a1, a2, time_step);
-        let k2 = self.calc_bottom_velocity(a1 + time_step * k1 / 2.0, a2 + time_step * k1 / 2.0, time_step);
-        let k3 = self.calc_bottom_velocity(a1 + time_step * k2 / 2.0, a2 + time_step * k2 / 2.0, time_step);
-        let k4 = self.calc_bottom_velocity(a1 + time_step, a2 + time_step, time_step);
 
         return (1.0 / 6.0) * time_step * (k1 + k2 + k3 + k4);
     }
