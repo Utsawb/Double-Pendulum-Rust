@@ -25,14 +25,17 @@ fn model(app: &App) -> Model {
     let win = app.window_rect().pad(10.0);
 
     //Custom Code
-    let pendulum = Pendulum::new(win.x(), win.y(), 9.81, 1.0, 150.0, 1.0, 1.0, 150.0, -1.0 * PI);
+    let pendulum = Pendulum::new(win.x(), win.y(), 100.0, 1.0, 150.0, PI, 1.0, 150.0, 3.0);
 
     Model { _window, pendulum }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {
     //Custom Code
-    _model.pendulum.update(_update.since_last.as_secs_f32());
+    let delta_time = _update.since_last.as_secs_f32();
+    _app.main_window().set_title(&format!("{}", delta_time));
+
+     _model.pendulum.update(delta_time);
 }
 
 fn view(app: &App, _model: &Model, frame: Frame) {
